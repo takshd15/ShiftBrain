@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shiftbrain",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3000", "C:\\industrial_ai"],
+      "port": 3000
+    }
+  ]
+}

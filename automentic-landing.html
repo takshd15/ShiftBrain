@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShiftBrain — AI Shift Supervisor Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --page: #E4E4E2;
+      --frame: #ECECEA;
+      --card: #FFFFFF;
+      --card-grey: #EFEFED;
+      --green: #C8E6A1;
+      --dark: #0A0A0A;
+      --text: #131313;
+      --text-sub: #6E6E6B;
+      --border: rgba(0,0,0,0.08);
+      --border-card: rgba(0,0,0,0.06);
+      --r: 20px;
+      --r-sm: 14px;
+      --pill: 100px;
+    }
+
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--page);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; font-family: inherit; border: none; }
+
+    /* ── FRAME ── */
+    .frame {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      background: var(--frame);
+      border: none;
+      border-radius: 0;
+      padding: 22px 40px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -0.4px; }
+    .logo-mark { width: 30px; height: 30px; position: relative; }
+    .logo-mark svg { width: 30px; height: 30px; }
+    .nav-links { display: flex; gap: 34px; list-style: none; }
+    .nav-links a { font-size: 14.5px; font-weight: 500; color: #3a3a38; transition: color .15s; }
+    .nav-links a:hover { color: #000; }
+    .btn-dark {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--dark); color: #fff;
+      font-size: 14px; font-weight: 600;
+      padding: 11px 20px; border-radius: var(--pill);
+      transition: transform .12s, background .15s;
+    }
+    .btn-dark:hover { background: #222; transform: translateY(-1px); }
+    .btn-dark svg { width: 13px; height: 13px; }
+
+    /* ── HERO ── */
+    .hero { position: relative; text-align: center; padding: 64px 0 8px; }
+    .hero-deco {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
+      background-size: 46px 46px;
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, transparent 38%, #000 78%);
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, transparent 38%, #000 78%);
+    }
+    .hero-inner { position: relative; z-index: 1; }
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 66px);
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1.04;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero p {
+      margin: 22px auto 0;
+      max-width: 600px;
+      font-size: 15.5px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+    .hero .cta-wrap { margin-top: 30px; }
+    .btn-dark.lg { padding: 13px 26px; font-size: 15px; }
+
+    /* ── BENTO ── */
+    .bento {
+      margin-top: 46px;
+      display: grid;
+      grid-template-columns: 1fr 1.25fr 1fr 1fr;
+      grid-template-rows: 196px 196px;
+      gap: 14px;
+    }
+    .b {
+      border-radius: var(--r);
+      border: 1px solid var(--border-card);
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .b-title { font-size: 21px; font-weight: 700; letter-spacing: -0.4px; }
+    .b-sub { margin-top: 7px; font-size: 12.5px; color: var(--text-sub); line-height: 1.5; max-width: 200px; }
+    .b-num { font-size: clamp(34px, 3.6vw, 46px); font-weight: 700; letter-spacing: -1.5px; line-height: 1; }
+
+    /* Integrations */
+    .b-integrations { background: var(--card); grid-column: 1; grid-row: 1; display: flex; flex-direction: column; }
+    .int-icons { display: flex; gap: 9px; margin-bottom: auto; }
+    .int-icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #fff; border: 1px solid var(--border-card);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* 2.5B+ */
+    .b-metric { background: var(--card-grey); grid-column: 1; grid-row: 2; display: flex; flex-direction: column; justify-content: flex-end; }
+
+    /* Face image */
+    .b-face {
+      grid-column: 2; grid-row: 1 / 3;
+      padding: 22px;
+      background:
+        radial-gradient(130% 90% at 72% 14%, rgba(200,230,161,0.18) 0%, transparent 46%),
+        linear-gradient(to top, #060606 0%, #0c0e0b 50%, #14170f 100%);
+      border-color: rgba(255,255,255,0.06);
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .face-mesh {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+    .face-map { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+    .face-scrim {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(to top, #050505 5%, rgba(5,5,5,0.55) 26%, transparent 48%);
+    }
+    .face-text { position: relative; z-index: 2; }
+    .face-text .b-title { color: #fff; }
+    .face-text .b-sub { color: #c7c7c2; max-width: 240px; }
+
+    /* 85% green */
+    .b-green { background: var(--green); grid-column: 3; grid-row: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+    .b-green .b-num { color: #16240c; }
+    .b-green .b-sub { color: #2f4220; max-width: none; }
+
+    /* projects dark */
+    .b-projects {
+      background: #060606; grid-column: 4; grid-row: 1;
+      border-color: rgba(255,255,255,0.06);
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .b-projects > * { position: relative; z-index: 1; }
+    .b-projects .b-title { color: #fff; }
+    .b-projects .b-sub { color: #9c9c97; max-width: none; }
+    .b-projects::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(120,150,255,0.22) 1px, transparent 1.4px);
+      background-size: 14px 14px; opacity: 0.5;
+    }
+    .b-projects::after {
+      content: ''; position: absolute; left: 50%; bottom: -30%;
+      width: 240px; height: 180px; transform: translateX(-50%);
+      background: radial-gradient(ellipse, rgba(60,200,120,0.35) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .folder { position: relative; z-index: 1; text-align: center; }
+    .folder svg { width: 56px; height: 46px; }
+    .folder span { display: block; margin-top: 8px; font-size: 12px; color: #cfd6e6; font-weight: 500; }
+
+    /* Automation wide */
+    .b-auto {
+      grid-column: 3 / 5; grid-row: 2;
+      background: linear-gradient(120deg, #F4F4F5 0%, #E1E9F5 52%, #F1DDE2 100%);
+      display: flex; align-items: center;
+    }
+    .b-auto h3 { font-size: 23px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.18; max-width: 230px; color: #15151a; }
+    .orbits { position: absolute; right: -40px; top: 50%; transform: translateY(-50%); width: 320px; height: 320px; }
+    .orbits .ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); border: 1px solid rgba(70,90,130,0.18); border-radius: 50%; }
+    .ring.r1 { width: 150px; height: 150px; }
+    .ring.r2 { width: 230px; height: 230px; }
+    .ring.r3 { width: 310px; height: 310px; }
+    .avatar { position: absolute; width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); background: #ccc; }
+    .a1 { top: 14%; right: 30%; }
+    .a2 { top: 40%; right: 6%; }
+    .a3 { bottom: 16%; right: 34%; }
+    .a4 { bottom: 30%; right: 60%; width: 38px; height: 38px; }
+    .node { position: absolute; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .node svg { width: 18px; height: 18px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 980px) {
+      .nav-links { display: none; }
+      .bento { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .b-integrations { grid-column: 1; grid-row: 1; min-height: 180px; }
+      .b-metric { grid-column: 2; grid-row: 1; min-height: 180px; }
+      .b-face { grid-column: 1 / 3; grid-row: 2; min-height: 300px; }
+      .b-green { grid-column: 1; grid-row: 3; min-height: 170px; }
+      .b-projects { grid-column: 2; grid-row: 3; min-height: 170px; }
+      .b-auto { grid-column: 1 / 3; grid-row: 4; min-height: 200px; }
+    }
+    @media (max-width: 560px) {
+      .frame { margin: 0; padding: 16px 18px 40px; border-radius: 0; }
+      .bento { grid-template-columns: 1fr; }
+      .b-integrations, .b-metric, .b-face, .b-green, .b-projects, .b-auto { grid-column: 1; }
+      .b-face { min-height: 260px; }
+    }
+
+    /* ════ FEATURES · HOW IT WORKS · CTA (ShiftBrain) ════ */
+    html { scroll-behavior: smooth; }
+    .sec { margin-top: 96px; }
+    .sec-head { max-width: 760px; margin: 0 auto; text-align: center; }
+    .sec-label { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8d84; margin-bottom: 14px; }
+    .sec-h2 { font-size: clamp(28px, 3.6vw, 44px); font-weight: 700; letter-spacing: -1.3px; line-height: 1.08; color: var(--text); }
+    .sec-sub { margin: 16px auto 0; max-width: 560px; font-size: 16px; color: var(--text-sub); line-height: 1.6; }
+
+    /* Features bento */
+    .feat-grid { margin-top: 46px; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 196px; gap: 14px; }
+    .feat { background: var(--card); display: flex; flex-direction: column; }
+    .feat .int-icon { margin-bottom: auto; }
+    .feat .b-sub { max-width: 260px; }
+    .feat-lime { background: var(--green); grid-column: span 2; }
+    .feat-lime .b-title { color: #16240c; }
+    .feat-lime .b-sub { color: #2f4220; max-width: 360px; }
+    .feat-lime .int-icon { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.05); box-shadow: none; }
+    .feat-wide { grid-column: span 4; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
+    .feat-wide .fw-text { max-width: 460px; }
+    .feat-wide .fw-text .int-icon { margin-bottom: 12px; }
+    .feat-wide .b-sub { max-width: 460px; }
+    .feat-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+    .fchip { display: inline-flex; align-items: center; gap: 8px; background: var(--card-grey); border: 1px solid var(--border-card); border-radius: var(--pill); padding: 9px 15px; font-size: 13px; font-weight: 600; color: var(--text); }
+    .fchip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: #4f9e2f; }
+    .dot-lime { background: #8fc63f; }
+    .dot-amber { background: #d49a06; }
+
+    /* How it works */
+    .how-steps { position: relative; margin-top: 46px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .how-steps::before { content: ''; position: absolute; top: 50px; left: 12%; right: 12%; border-top: 2px dashed var(--border); z-index: 0; }
+    .step { position: relative; z-index: 1; background: var(--card); border: 1px solid var(--border-card); border-radius: var(--r); padding: 24px 22px; min-height: 196px; display: flex; flex-direction: column; }
+    .step-num { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 26px; border-radius: var(--pill); background: var(--green); color: #16240c; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; margin-bottom: auto; }
+    .step .b-title { margin-top: 18px; }
+    .step .b-sub { max-width: none; margin-top: 8px; }
+
+    /* Workflow log */
+    .flow-log { margin-top: 14px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); border-radius: var(--r); padding: 28px 30px; background: radial-gradient(120% 130% at 88% -10%, rgba(200,230,161,0.13) 0%, transparent 46%), linear-gradient(180deg, #0c0e0b 0%, #060606 100%); }
+    .flow-pipe { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 22px; margin-bottom: 22px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .pipe-chip { font-size: 12.5px; font-weight: 600; color: #d7d9d2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: var(--pill); padding: 7px 14px; white-space: nowrap; }
+    .pipe-chip.ai { color: #16240c; background: var(--green); border-color: var(--green); }
+    .pipe-arrow { color: #6f7568; font-size: 13px; }
+    .flow-time { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, auto); grid-auto-flow: column; gap: 12px 56px; }
+    .t-line { display: flex; align-items: baseline; gap: 14px; font-size: 13.5px; color: #c3c5bd; line-height: 1.4; }
+    .t-time { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 600; color: #7e8278; min-width: 76px; flex-shrink: 0; }
+    .t-line.ai { color: #cfe7a6; font-weight: 600; }
+    .t-line.ai .t-time { color: #9bcf4f; }
+    .t-line.report { color: #ffffff; font-weight: 600; }
+    .t-line.report .t-time { color: #c8e6a1; }
+
+    /* Final CTA */
+    .cta-card { margin-top: 96px; position: relative; overflow: hidden; text-align: center; border: 1px solid var(--border-card); border-radius: 24px; padding: 76px 40px; background: radial-gradient(90% 140% at 50% -20%, rgba(200,230,161,0.32) 0%, transparent 55%), var(--card); }
+    .cta-card h2 { font-size: clamp(28px, 3.8vw, 46px); font-weight: 700; letter-spacing: -1.4px; line-height: 1.08; color: var(--text); max-width: 640px; margin: 0 auto; }
+    .cta-card p { margin: 18px auto 0; max-width: 540px; font-size: 16px; color: var(--text-sub); line-height: 1.6; }
+    .cta-card .cta-wrap { margin-top: 30px; }
+
+    @media (max-width: 980px) {
+      .sec { margin-top: 76px; }
+      .feat-grid { grid-template-columns: repeat(2, 1fr); }
+      .feat-lime { grid-column: span 2; }
+      .feat-wide { grid-column: span 2; flex-direction: column; align-items: flex-start; }
+      .feat-chips { justify-content: flex-start; }
+      .how-steps { grid-template-columns: repeat(2, 1fr); }
+      .how-steps::before { display: none; }
+      .flow-time { grid-template-columns: 1fr; grid-template-rows: auto; grid-auto-flow: row; gap: 10px; }
+    }
+    @media (max-width: 560px) {
+      .sec { margin-top: 60px; }
+      .feat-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
+      .feat, .feat-lime, .feat-wide { grid-column: span 1; min-height: 168px; }
+      .how-steps { grid-template-columns: 1fr; }
+      .cta-card { padding: 54px 22px; }
+      .flow-log { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="frame">
+
+    <!-- ── NAV ── -->
+    <nav>
+      <a href="#" class="logo">
+        <span class="logo-mark">
+          <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="26" height="26" rx="8" fill="#0A0A0A"/>
+            <circle cx="15" cy="9.5" r="2" fill="#fff"/>
+            <circle cx="9" cy="20.5" r="2" fill="#fff"/>
+            <circle cx="21" cy="20.5" r="2" fill="#fff"/>
+            <circle cx="15" cy="15.5" r="1.9" fill="#C8E6A1"/>
+            <path d="M15 9.5L15 15.5M15 15.5L9 20.5M15 15.5L21 20.5" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+        </span>
+        ShiftBrain
+      </a>
+      <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#">Use Cases</a></li>
+        <li><a href="#">FAQ</a></li>
+      </ul>
+      <button class="btn-dark" onclick="location.href='demo.html'">Start Now
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+    </nav>
+
+    <!-- ── HERO ── -->
+    <section class="hero">
+      <div class="hero-deco" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <h1>One AI Command Center for<br>Every Factory Shift</h1>
+        <p>ShiftBrain helps supervisors catch safety risks, quality issues, machine problems, and inventory gaps in one live view — then turns them into clear actions before downtime gets expensive.</p>
+        <div class="cta-wrap">
+          <button class="btn-dark lg" onclick="location.href='demo.html'">Start Now
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── BENTO ── -->
+      <div class="bento">
+
+        <!-- Integrations -->
+        <div class="b b-integrations">
+          <div class="int-icons">
+            <span class="int-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M9 7.2c.7-.8 1.8-1.2 3-1.2s2.3.4 3 1.2"/><path d="M3 15h18"/></svg>
+            </span>
+            <span class="int-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="18" r="1.8"/><circle cx="13.5" cy="18" r="1.8"/><path d="M4.5 16.2V7h4l3 4v5.2"/><path d="M15.5 18H18V8M18 8l3 4h-3"/></svg>
+            </span>
+            <span class="int-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.2 4.2 5 6.8 5 9.2A5 5 0 0 1 7 12.2C7 9.8 8.8 7.2 12 3z"/></svg>
+            </span>
+          </div>
+          <div class="b-title">Safety Watch</div>
+          <div class="b-sub">Detect PPE risks, forklift near-misses, spills, and unsafe floor behavior in real time.</div>
+        </div>
+
+        <!-- 2.5B+ -->
+        <div class="b b-metric">
+          <div class="b-num">1 Shift Plan</div>
+          <div class="b-sub">From scattered events to one clear action list for the supervisor.</div>
+        </div>
+
+        <!-- Face image -->
+        <div class="b b-face">
+          <div class="face-mesh" aria-hidden="true"></div>
+          <svg class="face-map" viewBox="0 0 340 440" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g fill="none" stroke="rgba(255,255,255,0.09)">
+              <circle cx="208" cy="135" r="52"/>
+              <circle cx="208" cy="135" r="98"/>
+              <circle cx="208" cy="135" r="150"/>
+            </g>
+            <g stroke="rgba(200,230,161,0.32)" stroke-width="1.1">
+              <line x1="208" y1="135" x2="92" y2="78"/>
+              <line x1="208" y1="135" x2="322" y2="66"/>
+              <line x1="208" y1="135" x2="74" y2="226"/>
+              <line x1="208" y1="135" x2="330" y2="246"/>
+              <line x1="208" y1="135" x2="150" y2="300"/>
+            </g>
+            <g>
+              <circle cx="92" cy="78" r="3.4" fill="#ffffff"/>
+              <circle cx="322" cy="66" r="3.4" fill="#ffffff"/>
+              <circle cx="74" cy="226" r="3.4" fill="#ffffff"/>
+              <circle cx="330" cy="246" r="3.4" fill="#ffffff"/>
+              <circle cx="150" cy="300" r="3.4" fill="#ffffff"/>
+              <circle cx="208" cy="135" r="14" fill="none" stroke="rgba(200,230,161,0.45)" stroke-width="1.2"/>
+              <circle cx="208" cy="135" r="7" fill="#C8E6A1"/>
+            </g>
+          </svg>
+          <div class="face-scrim" aria-hidden="true"></div>
+          <div class="face-text">
+            <div class="b-title">Supervisor Brain</div>
+            <div class="b-sub">Finds the likely root cause, prioritizes what matters, and recommends the next best action.</div>
+          </div>
+        </div>
+
+        <!-- 85% -->
+        <div class="b b-green">
+          <div class="b-num">4 Ops Signals</div>
+          <div class="b-sub">Safety, quality, maintenance, and inventory connected in one shift view.</div>
+        </div>
+
+        <!-- projects -->
+        <div class="b b-projects">
+          <div class="b-title">Maintenance Risk</div>
+          <div class="b-sub">Catch machine warnings early and create work orders before breakdowns stop the line.</div>
+        </div>
+
+        <!-- Automation Driven Support Excellence -->
+        <div class="b b-auto">
+          <div class="auto-text">
+            <h3>Auto Handoff Report</h3>
+            <div class="b-sub" style="max-width:240px;margin-top:10px;">Generate a clean end-of-shift summary of what happened, what changed, and what needs attention next.</div>
+          </div>
+          <div class="orbits" aria-hidden="true">
+            <span class="ring r1"></span>
+            <span class="ring r2"></span>
+            <span class="ring r3"></span>
+            <span class="node a1"><svg viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 8.5-4-1-7-4-7-8.5V6l7-3z"/></svg></span>
+            <span class="node a2"><svg viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 9-10"/></svg></span>
+            <span class="node a3"><svg viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a3.5 3.5 0 0 0-4.6 4.6L4 17l3 3 5.9-5.9a3.5 3.5 0 0 0 4.6-4.6l-2.2 2.2-2-2 2.2-2.2z"/></svg></span>
+            <span class="node a4"><svg viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l9-4 9 4-9 4-9-4z"/><path d="M3 7.5v8l9 4 9-4v-8"/></svg></span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── FEATURES ── -->
+    <section class="sec" id="features">
+      <div class="sec-head">
+        <span class="sec-label">Features</span>
+        <h2 class="sec-h2">Everything your shift supervisor needs in one view.</h2>
+        <p class="sec-sub">ShiftBrain connects the floor's most important signals and turns scattered problems into clear, prioritized actions.</p>
+      </div>
+
+      <div class="feat-grid">
+        <!-- Safety Watch -->
+        <div class="b feat">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a8 8 0 0 1 16 0"/><path d="M9 7.2c.7-.8 1.8-1.2 3-1.2s2.3.4 3 1.2"/><path d="M3 15h18"/></svg></span>
+          <div class="b-title">Safety Watch</div>
+          <div class="b-sub">Detect PPE risks, forklift near-misses, spills, and unsafe floor behavior before they become incidents.</div>
+        </div>
+        <!-- Quality Drift Detection -->
+        <div class="b feat">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l5-5 4 4 8-9"/><path d="M16 6h5v5"/></svg></span>
+          <div class="b-title">Quality Drift Detection</div>
+          <div class="b-sub">Spot rising rejects, line drift, and batches that may need quarantine before defects spread.</div>
+        </div>
+        <!-- Maintenance Risk -->
+        <div class="b feat">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3L12 4z"/><path d="M12 10v4M12 17v.5"/></svg></span>
+          <div class="b-title">Maintenance Risk</div>
+          <div class="b-sub">Catch machine warnings early, connect them to downtime patterns, and create repair actions automatically.</div>
+        </div>
+        <!-- Inventory Signals -->
+        <div class="b feat">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5l9-4 9 4-9 4-9-4z"/><path d="M3 7.5v8l9 4 9-4v-8"/><path d="M12 11.5V20"/></svg></span>
+          <div class="b-title">Inventory Signals</div>
+          <div class="b-sub">Flag low spare parts, damaged stock, expiry risks, and material gaps that could block the shift.</div>
+        </div>
+        <!-- Supervisor Reasoning (LIME) -->
+        <div class="b feat feat-lime">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16240c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="2"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><circle cx="12" cy="11.5" r="1.4"/><path d="M12 8v2.1M11.1 12.6L7.5 15.1M12.9 12.6l3.6 2.5"/></svg></span>
+          <div class="b-title">Supervisor Reasoning</div>
+          <div class="b-sub">Connect safety, quality, maintenance, inventory, and production events to find the likely root cause.</div>
+        </div>
+        <!-- Auto Handoff Report -->
+        <div class="b feat">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/></svg></span>
+          <div class="b-title">Auto Handoff Report</div>
+          <div class="b-sub">Generate a clean end-of-shift summary with what happened, what changed, and what needs attention next.</div>
+        </div>
+        <!-- Action Creation -->
+        <div class="b feat">
+          <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5.5 13H11l-1 8 7.5-10.5H12l1-7.5z"/></svg></span>
+          <div class="b-title">Action Creation</div>
+          <div class="b-sub">Create safety logs, quality holds, maintenance work orders, and inventory alerts from one AI workflow.</div>
+        </div>
+        <!-- Live Shift Health (wide) -->
+        <div class="b feat feat-wide">
+          <div class="fw-text">
+            <span class="int-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131313" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3.5 10L15 9l1.5 3H21"/></svg></span>
+            <div class="b-title">Live Shift Health</div>
+            <div class="b-sub">Give managers a simple view of shift risk, output, blockers, and recommended next steps.</div>
+          </div>
+          <div class="feat-chips">
+            <span class="fchip"><span class="dot dot-green"></span>Risk: Low</span>
+            <span class="fchip"><span class="dot dot-lime"></span>Output: On track</span>
+            <span class="fchip"><span class="dot dot-amber"></span>Blockers: 2</span>
+            <span class="fchip"><span class="dot dot-green"></span>Next steps: 3</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="sec" id="how">
+      <div class="sec-head">
+        <span class="sec-label">How it works</span>
+        <h2 class="sec-h2">From floor signals to supervisor action.</h2>
+        <p class="sec-sub">ShiftBrain follows the full operational loop: watch, reason, act, and report.</p>
+      </div>
+
+      <div class="how-steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <div class="b-title">Watch</div>
+          <div class="b-sub">Connect cameras, machine alerts, quality checks, inventory records, and production events.</div>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <div class="b-title">Reason</div>
+          <div class="b-sub">The AI connects events across departments and identifies what is likely causing the shift problem.</div>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <div class="b-title">Act</div>
+          <div class="b-sub">ShiftBrain recommends priorities and creates workflow actions for safety, quality, maintenance, and inventory.</div>
+        </div>
+        <div class="step">
+          <span class="step-num">04</span>
+          <div class="b-title">Report</div>
+          <div class="b-sub">Generate a shift handoff report so the next supervisor knows exactly what happened and what to do next.</div>
+        </div>
+      </div>
+
+      <!-- workflow log -->
+      <div class="flow-log">
+        <div class="flow-pipe">
+          <span class="pipe-chip">Camera Alert</span><span class="pipe-arrow">→</span>
+          <span class="pipe-chip">Machine Warning</span><span class="pipe-arrow">→</span>
+          <span class="pipe-chip">Quality Spike</span><span class="pipe-arrow">→</span>
+          <span class="pipe-chip ai">AI Decision</span><span class="pipe-arrow">→</span>
+          <span class="pipe-chip">Actions Created</span><span class="pipe-arrow">→</span>
+          <span class="pipe-chip">Shift Report</span>
+        </div>
+        <div class="flow-time">
+          <div class="t-line"><span class="t-time">09:12</span><span>PPE risk detected</span></div>
+          <div class="t-line"><span class="t-time">09:18</span><span>Machine 3 vibration warning</span></div>
+          <div class="t-line"><span class="t-time">09:24</span><span>Reject rate rising</span></div>
+          <div class="t-line ai"><span class="t-time">09:30</span><span>ShiftBrain finds likely root cause</span></div>
+          <div class="t-line"><span class="t-time">09:31</span><span>Work order + quality hold created</span></div>
+          <div class="t-line report"><span class="t-time">End of shift</span><span>Handoff report generated</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FINAL CTA ── -->
+    <div class="cta-card">
+      <h2>Run every shift with fewer surprises.</h2>
+      <p>Give supervisors one AI operating picture across safety, quality, maintenance, inventory, and production.</p>
+      <div class="cta-wrap">
+        <button class="btn-dark lg" onclick="location.href='demo.html'">Start Now
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
