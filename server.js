@@ -13,6 +13,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));   // serves demo.html, favicon, etc.
 
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'automentic-landing.html'));
+});
+
+app.get('/landing', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'automentic-landing.html'));
+});
+
+app.get('/demo', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'demo.html'));
+});
+
 // ── Startup env validation ────────────────────────────────────────────────────
 const REQUIRED_ENV = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'GEMINI_API_KEY'];
 const missingEnv = REQUIRED_ENV.filter(k => !process.env[k]);
