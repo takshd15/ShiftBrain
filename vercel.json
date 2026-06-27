@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/demo.html"
+      "destination": "/automentic-landing.html"
     },
     {
       "source": "/demo",
