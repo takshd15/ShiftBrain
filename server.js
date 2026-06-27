@@ -19,17 +19,19 @@ const missingEnv = REQUIRED_ENV.filter(k => !process.env[k]);
 if (missingEnv.length) {
   console.error(`[ShiftBrain] STARTUP BLOCKED — missing env vars: ${missingEnv.join(', ')}`);
   console.error('Copy .env.example → .env and fill in all values.');
-  process.exit(1);
+  console.warn('Static demo can still run. API routes will return 503 until env vars are configured.');
 }
 
 // ── Clients ───────────────────────────────────────────────────────────────────
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+const hasSupabaseEnv = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
+const supabase = hasSupabaseEnv
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = process.env.GEMINI_API_KEY
+  ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+  : null;
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // ── Schema capability detection ───────────────────────────────────────────────
@@ -48,6 +50,11 @@ const schemaHas = {
   sr_text:        false,   // shift_reports: report_text
 };
 (async () => {
+  if (!supabase) {
+    console.warn('[ShiftBrain] Schema probe skipped because Supabase env is not configured.');
+    return;
+  }
+
   const probe = async (table, col) => {
     const { error } = await supabase.from(table).select(col).limit(1);
     return !error;
@@ -72,7 +79,18 @@ function fail(res, status, message) {
   return res.status(status).json({ error: message });
 }
 
+function requireSupabase(_req, res, next) {
+  if (!supabase) {
+    return fail(res, 503, 'Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_KEY.');
+  }
+  return next();
+}
+
 async function gemini(systemInstruction, userPrompt) {
+  if (!ai) {
+    throw new Error('GEMINI_API_KEY is not configured.');
+  }
+
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
     config: { systemInstruction },
@@ -122,6 +140,8 @@ app.get('/api/config', (_req, res) => {
     supabase_anon_key: process.env.SUPABASE_ANON_KEY,
   });
 });
+
+app.use('/api', requireSupabase);
 
 // ── Route 1: POST /api/shifts/start ──────────────────────────────────────────
 
@@ -814,4 +834,8 @@ app.post('/api/demo/seed', async (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT ?? 3001;
-app.listen(PORT, () => console.log(`ShiftBrain API running on http://localhost:${PORT}`));
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => console.log(`ShiftBrain API running on http://localhost:${PORT}`));
+}
+
+export default app;
